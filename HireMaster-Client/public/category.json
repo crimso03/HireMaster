@@ -1,0 +1,43 @@
+[
+    {
+        "id": 1,
+      "job_title": "Frontend Developer",
+      "image": "/category-images/frontend-developer.jpg"
+      
+    },
+    {
+        "id": 2,
+      "job_title": "Senior Full-Stack Developer",
+      "image": "/category-images/senior-full-stack-developer.jpg"
+    },
+    {
+        "id": 3,
+      "job_title": "Software Engineer",
+      "image": "/category-images/software-engineer.jpg"
+    },
+    {
+        "id": 4,
+      "job_title": "Cloud Solutions Architect",
+      "image": "/category-images/cloud-solutions-architect.jpg"
+    },
+    {
+        "id": 5,
+      "job_title": "Data Scientist",
+      "image": "/category-images/data-scientist.jpg"
+    },
+    {
+        "id": 6,
+      "job_title": "UX/UI Designer",
+      "image": "/category-images/ui-ux-designer.jpg"
+    },
+    {
+        "id": 7,
+      "job_title": "Network Engineer",
+      "image": "/category-images/network-engineer.jpg"
+    },
+    {
+        "id": 8,
+      "job_title": "DevOps Engineer",
+      "image": "/category-images/devops-engineer.jpg"
+    }
+  ]
