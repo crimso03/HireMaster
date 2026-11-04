@@ -12,7 +12,7 @@ const { default: slugify } = require("slugify");
 const port = process.env.PORT || 5000;
 
 // const client_URL = "http://localhost:5173";
-// const server_URL = "http://localhost:5000";
+// const server_URL = "https://hire-master-server.vercel.app";
 
 // Socket.io
 const http = require("http");
@@ -23,16 +23,23 @@ const io = require("socket.io")(server, {
   },
 });
 
+
 const client_URL = "http://localhost:5173";
 const server_URL = "https://hire-master-server.vercel.app";
 
-// middleware
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://hire-master-seven.vercel.app",
+  /^https:\/\/hire-master-[a-z0-9-]+\.vercel\.app$/,
+];
+
 app.use(
   cors({
-    origin: [client_URL],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
+
 
 app.use(cookieParser());
 
