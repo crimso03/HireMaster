@@ -26,7 +26,7 @@ import Projects from "../../Pages/Projects/Projects";
 import Experience from "../../Pages/Experience/Experience";
 import Skills from "../../Pages/Skills/Skills";
 import AdminDashboard from "../../AdminDashboard/AdminDashboard";
-import AllUsers from "../../AdminDashboard/allUsers/allUsers";
+import AllUsers from "../../AdminDashboard/AllUsers/AllUsers";
 import AllJobPost from "../../AdminDashboard/AllJobPost/AllJobPost";
 import TechNews from "../../Pages/TechNews/TechNews";
 import AdminTechNews from "../../AdminDashboard/AllTechNews/AdminTechNews";
