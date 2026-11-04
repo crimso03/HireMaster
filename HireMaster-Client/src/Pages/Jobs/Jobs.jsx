@@ -19,9 +19,9 @@ const Jobs = () => {
   });
 
   // ----------------server api ---------------
-  const { data: jobs, loading, refetch } = useFetchData(
-    "/filter/static-job-post"
-  );
+  const { data: jobs, loading } = useFetchData(
+  "/filter/static-job-post"
+);
 
   React.useEffect(() => {
     if (jobs.length > 0) {
@@ -33,7 +33,6 @@ const Jobs = () => {
     return <Loader />;
   }
 
-  refetch();
 
   const handleSubmit = e => {
     e.preventDefault();
