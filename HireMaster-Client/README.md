@@ -59,7 +59,7 @@ VITE_IMAGE_HOSTING_KEY_COMPANY_LOGO=ccbaf51fa2d1fd48dc9cc80274dab471
 VITE_IMAGE_HOSTING_KEY_COURSE_PHOTO=000b9b32a2a9baab2d0199d42a3c2ace
 
 # Connect frontend with backend by this link given bellow.
-https://hire-master-server.vercel.app
+https://hiremaster-server.vercel.app
 
 * Replace this link in axiosPublic, axiosSecure and explore by category if needed.
 

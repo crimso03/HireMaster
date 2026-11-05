@@ -11,7 +11,7 @@ const App = () => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    setSocket(io("https://hire-master-server.vercel.app"));
+    setSocket(io("https://hiremaster-server.vercel.app"));
   }, []);
 
   useEffect(() => {

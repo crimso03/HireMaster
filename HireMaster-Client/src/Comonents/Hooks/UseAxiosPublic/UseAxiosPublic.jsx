@@ -1,10 +1,10 @@
 import axios from "axios";
 
 // const AxiosPublic = axios.create({
-//   baseURL: "https://hire-master-server.vercel.app",
+//   baseURL: "https://hiremaster-server.vercel.app",
 // });
 const AxiosPublic = axios.create({
-  baseURL:'https://hire-master-server.vercel.app'
+  baseURL:'https://hiremaster-server.vercel.app'
 })
 
 const UseAxiosPublic = () => {
