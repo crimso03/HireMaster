@@ -1,4 +1,5 @@
 const express = require("express");
+console.log("VERCEL NODE VERSION:", process.version);
 const { initializeApp, applicationDefault, cert, getApps } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const cloudinary = require("cloudinary").v2;
