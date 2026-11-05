@@ -51,10 +51,17 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 
-const uploadPath = path.join(__dirname, "resumes");
+
+const uploadPath = process.env.VERCEL
+  ? "/tmp/resumes"
+  : path.join(__dirname, "resumes");
+
 if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath);
+  fs.mkdirSync(uploadPath, { recursive: true });
 }
+
+app.use("/resumes", express.static(uploadPath));
+
 
 app.use("/resumes", express.static(uploadPath));
 
