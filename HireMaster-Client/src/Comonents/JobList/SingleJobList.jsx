@@ -128,11 +128,17 @@ const SingleJobList = ({ job }) => {
       <Toaster position="top-right" reverseOrder={false} />
       {/* ----------Company logo------------ */}
       <figure className=" md:flex items-center justify-center ">
-        <img
-          src={job.company_logo}
-          alt="company logo"
-          className="w-16 mx-auto"
-        />
+        
+<img
+  src={job.company_logo || "/hiremaster-logo.png"}
+  alt="company logo"
+  className="w-16 mx-auto"
+  onError={(e) => {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = "/hiremaster-logo.png";
+  }}
+/>
+
         <p></p>
       </figure>
       {/* ----------Job OverView------------ */}
