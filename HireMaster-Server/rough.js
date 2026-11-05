@@ -16,10 +16,10 @@ const fs = require("fs");
 const multer = require("multer");
 
 const client_URL = "http://localhost:5173";
-const server_URL = "http://localhost:5000";
+const server_URL = "https://hiremaster-server.vercel.app";
 
 // const client_URL = "https://hiremaster.netlify.app";
-// const server_URL = "https://hire-master-server.vercel.app";
+// const server_URL = "https://hiremaster-server.vercel.app";
 
 // Socket.io
 const http = require("http");

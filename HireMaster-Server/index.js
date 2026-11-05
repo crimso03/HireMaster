@@ -1,4 +1,6 @@
 const express = require("express");
+const { initializeApp, applicationDefault, getApps } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
 const cloudinary = require("cloudinary").v2;
 const app = express();
 const cors = require("cors");
@@ -11,8 +13,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { default: slugify } = require("slugify");
 const port = process.env.PORT || 5000;
 
+if (!getApps().length) {
+  initializeApp({
+    credential: applicationDefault(),
+    projectId: process.env.FIREBASE_PROJECT_ID,
+  });
+}
+
+
 // const client_URL = "http://localhost:5173";
-// const server_URL = "https://hire-master-server.vercel.app";
+// const server_URL = "https://hiremaster-server.vercel.app";
 
 // Socket.io
 const http = require("http");
@@ -25,7 +35,7 @@ const io = require("socket.io")(server, {
 
 
 const client_URL = "http://localhost:5173";
-const server_URL = "https://hire-master-server.vercel.app";
+const server_URL = "https://hiremaster-server.vercel.app";
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -76,6 +86,21 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF resumes are allowed"));
+    }
+  },
+});
+
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lzichn4.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -110,6 +135,38 @@ const verifyToken = async (req, res, next) => {
     next();
   });
 };
+
+
+const verifyFirebaseToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Firebase authentication token required",
+      });
+    }
+
+    const idToken = authHeader.slice(7);
+
+    const decodedToken = await getAuth().verifyIdToken(idToken, true);
+
+    req.firebaseUser = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      emailVerified: decodedToken.email_verified,
+    };
+
+    next();
+  } catch (error) {
+    console.error("Firebase authentication failed:", error.code);
+
+    return res.status(401).json({
+      message: "Invalid or expired Firebase token",
+    });
+  }
+};
+
 
 // cloudinary image upload
 cloudinary.config({
@@ -258,46 +315,127 @@ async function run() {
     });
 
     // user resume upload
-    app.post("/upload/cv-resume", upload.single("file"), async (req, res) => {
-      try {
-        const resume = req.file.filename;
-        const user_email = req.body.user_email;
-        const existingUser = await resumeCollection.findOne({ user_email });
+    
 
-        
-        const result = await resumeCollection.insertOne({
-          user_email,
-          resume,
-        });
-        const savedResume = {
-          _id: result.insertedId,
-          user_email: user_email,
-          resume: resume,
-        };
-        res.json({
-          success: true,
-          message: "Resume uploaded successfully",
-          savedResume,
-        });
-        // }
-      } catch (error) {
-        console.error("Error during file upload:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-      }
+app.post(
+  "/upload/cv-resume",
+  verifyFirebaseToken,
+  resumeUpload.single("file"),
+  async (req, res) => {
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Resume PDF is required" });
+    }
+
+    const user_email = req.body.user_email;
+    
+if (
+  !req.firebaseUser.email ||
+  req.firebaseUser.email.toLowerCase() !==
+    user_email?.toLowerCase()
+) {
+  return res.status(403).json({
+    error: "You can only upload your own resume",
+  });
+}
+
+
+    if (!user_email) {
+      return res.status(400).json({ error: "User email is required" });
+    }
+
+    // Validate PDF file signature
+    if (req.file.buffer.subarray(0, 5).toString() !== "%PDF-") {
+      return res.status(400).json({ error: "Invalid PDF file" });
+    }
+
+    // Upload PDF to Cloudinary
+    const uploadedResume = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "raw",
+          folder: "hiremaster/resumes",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      stream.end(req.file.buffer);
     });
 
-    app.get("/get-resumes/:user_email", async (req, res) => {
-      try {
-        const user_email = req.params.user_email;
-        const userResumes = await resumeCollection
-          .find({ user_email })
-          .toArray();
-        res.json(userResumes);
-      } catch (error) {
-        console.error("Error during GET request:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-      }
+    // Save resume URL in MongoDB
+    const resume = uploadedResume.secure_url;
+
+    const result = await resumeCollection.insertOne({
+      user_email,
+      resume,
+      public_id: uploadedResume.public_id,
+      createdAt: new Date(),
     });
+
+    const savedResume = {
+      _id: result.insertedId,
+      user_email,
+      resume,
+    };
+
+    res.json({
+      success: true,
+      message: "Resume uploaded successfully",
+      savedResume,
+    });
+  } catch (error) {
+    console.error("Error uploading resume:", error);
+    res.status(500).json({ error: "Resume upload failed" });
+  }
+});
+
+
+   
+app.get("/get-resumes/:user_email", async (req, res) => {
+  try {
+    const user_email = req.params.user_email;
+
+    const userResume = await resumeCollection.findOne(
+      { user_email, resume: /^https:\/\// },
+      { sort: { createdAt: -1, _id: -1 } }
+    );
+
+    if (!userResume) {
+      return res.status(404).json({
+        error: "Resume not found",
+      });
+    }
+
+    const response = await fetch(userResume.resume);
+
+    if (!response.ok) {
+      return res.status(502).json({
+        error: "Unable to retrieve resume",
+      });
+    }
+
+    const pdfBuffer = Buffer.from(await response.arrayBuffer());
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="resume.pdf"'
+    );
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error downloading resume:", error);
+
+    res.status(500).json({
+      error: "Resume download failed",
+    });
+  }
+});
+
 
     
 

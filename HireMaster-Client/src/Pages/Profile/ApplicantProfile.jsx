@@ -72,15 +72,7 @@ const ApplicantProfile = () => {
                 <p className="opacity-0 border-[0.5px] w-[150px] md:w-[400px] lg:w-[700px]"></p>
               </h3>
               <div className="my-8 md:my-16 lg:my-28">
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-2 btn bg-[#FF3811] text-white hover:text-black"
-                >
-                  <span>Resume</span>{" "}
-                  <span>
-                    <FaDownload />
-                  </span>
-                </button>
+                
               </div>
             </div>
           </div>

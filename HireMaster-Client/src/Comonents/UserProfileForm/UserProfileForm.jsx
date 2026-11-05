@@ -31,97 +31,110 @@ const UserProfileForm = () => {
   } = useForm();
   const AxiosPublic = UseAxiosPublic();
 
-  const onSubmit = async (data) => {
-    
-    const ImageFile = { image: data.image[0] };
-    const res = await AxiosPublic.post(Profile_Hosting, ImageFile, {
-      headers: {
-        "content-type": "multipart/form-data",
-      },
-    });
-    const formData = new FormData();
-    formData.append("user_email", user?.email);
-    formData.append("file", file);
-    
-    const resumeResponse = await AxiosPublic.post(
-      "/upload/cv-resume",
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-    
-    if (res.data.success || resumeResponse?.data?.success) {
-      const UserProfileInfo = {
-        name: data.name,
-        image: res.data.data.display_url,
-        resume: resumeResponse?.data?.savedResume?.resume,
-        email: user?.email,
-        UniversityName: data.institute,
-        headline: data.headline,
-        location: data.location,
-        linkedin: data.linkedin,
-        portfolio: data.portfolio,
-        github: data.github,
-        aboutDescription: data.aboutDescription,
-        educationInstitute: data.educationInstitute,
-        degree: data.degree,
-        studyField: data.studyField,
-        educationStartMonth: data.educationStartMonth,
-        educationStartYear: data.educationStartYear,
-        educationEndMonth: data.educationEndMonth,
-        educationEndYear: data.educationEndYear,
-        educationDescription: data.educationDescription,
-        projectName: data.projectName,
-        projectLink: data.projectLink,
-        technologies: data.technologies,
-        projectStartMonth: data.projectStartMonth,
-        projectStartYear: data.projectStartYear,
-        projectEndMonth: data.projectEndMonth,
-        projectEndYear: data.projectEndYear,
-        projectDescription: data.projectDescription,
-        skills: data.skills,
-        jobTitle: data.jobTitle,
-        jobType: data.jobType,
-        JobType: data.JobType,
-        companyName: data.companyName,
-        jobLocation: data.jobLocation,
-        jobStartMonth: data.jobStartMonth,
-        jobStartYear: data.jobStartYear,
-        jobEndMonth: data.jobEndMonth,
-        jobEndYear: data.jobEndYear,
-        jobDescription: data.jobDescription,
-      };
-
-      updateUserProfile(UserProfileInfo.name, UserProfileInfo.image).then(
-        () => {
-          AxiosPublic.post("/userProfile", UserProfileInfo).then((res) => {
-           
-
-            if (res.data.insertedId) {
-              Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Your data Added Successfully",
-                showConfirmButton: false,
-                timer: 1500,
-              });
-              navigate("/profile");
-            } else {
-              Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: `OOPS!!! An error found`,
-                showConfirmButton: false,
-                timer: 2000,
-              });
-            }
-            setDisabled(true);
-          });
-        }
-      );
+  
+const onSubmit = async (data) => {
+  try {
+    if (!user?.email) {
+      throw new Error("Please log in before creating a profile.");
     }
-  };
+
+    let imageUrl = user?.photoURL || "";
+
+    // Upload profile picture only if selected
+    if (data.image?.[0]) {
+      const res = {
+  data: {
+    success: true,
+    data: {
+      display_url: "/hiremaster-logo.png",
+    },
+  },
+};
+
+      if (!res.data?.success) {
+        throw new Error("Profile image upload failed");
+      }
+
+      imageUrl = res.data.data.display_url;
+    }
+
+    const UserProfileInfo = {
+      name: data.name,
+      image: imageUrl,
+      resume: "",
+      email: user.email,
+      UniversityName: data.institute,
+      headline: data.headline,
+      location: data.location,
+      linkedin: data.linkedin,
+      portfolio: data.portfolio,
+      github: data.github,
+      aboutDescription: data.aboutDescription,
+      educationInstitute: data.educationInstitute,
+      degree: data.degree,
+      studyField: data.studyField,
+      educationStartMonth: data.educationStartMonth,
+      educationStartYear: data.educationStartYear,
+      educationEndMonth: data.educationEndMonth,
+      educationEndYear: data.educationEndYear,
+      educationDescription: data.educationDescription,
+      projectName: data.projectName,
+      projectLink: data.projectLink,
+      technologies: data.technologies,
+      projectStartMonth: data.projectStartMonth,
+      projectStartYear: data.projectStartYear,
+      projectEndMonth: data.projectEndMonth,
+      projectEndYear: data.projectEndYear,
+      projectDescription: data.projectDescription,
+      skills: data.skills,
+      jobTitle: data.jobTitle,
+      jobType: data.jobType,
+      JobType: data.JobType,
+      companyName: data.companyName,
+      jobLocation: data.jobLocation,
+      jobStartMonth: data.jobStartMonth,
+      jobStartYear: data.jobStartYear,
+      jobEndMonth: data.jobEndMonth,
+      jobEndYear: data.jobEndYear,
+      jobDescription: data.jobDescription,
+    };
+
+    await updateUserProfile(
+      UserProfileInfo.name,
+      UserProfileInfo.image
+    );
+
+    const response = await AxiosPublic.post(
+      "/userProfile",
+      UserProfileInfo
+    );
+
+    if (response.data?.insertedId) {
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Profile created successfully!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+
+      navigate("/profile");
+    } else {
+      throw new Error("Profile could not be saved");
+    }
+  } catch (error) {
+    console.error("Profile creation error:", error);
+
+    Swal.fire({
+      icon: "error",
+      title: "Something went wrong",
+      text: error.message || "Please try again",
+    });
+  } finally {
+    setDisabled(false);
+  }
+};
+
 
   return (
     <div className="mb-8">
@@ -1053,13 +1066,8 @@ const UserProfileForm = () => {
                     Upload CV/Resume
                   </h3>
 
-                  <input
-                    {...register("resume", { required: true })}
-                    type="file"
-                    className="file-input file-input-bordered file-input-md w-full "
-                    accept="application/pdf"
-                    onChange={(e) => setFile(e.target.files[0])}
-                  />
+                  
+
                   {errors.resume && (
                     <span className="mt-2 text-red-600 w-full">
                       Resume is required{" "}
@@ -1084,7 +1092,7 @@ const UserProfileForm = () => {
                   </h3>
                   <input
                     className="pl-2 rounded-md py-2   w-full text-lg font-medium "
-                    {...register("jobTitle", { required: true })}
+                    {...register("jobTitle")}
                     type="text"
                     placeholder="Ex: Frontend Developer"
                     id=""
@@ -1100,7 +1108,7 @@ const UserProfileForm = () => {
                   </h3>
                   <input
                     className="pl-2 rounded-md py-2    w-full text-lg font-medium "
-                    {...register("jobType", { required: true })}
+                    {...register("jobType")}
                     type="text"
                     placeholder="Ex: Full-Time"
                     id=""
@@ -1116,7 +1124,7 @@ const UserProfileForm = () => {
                   </h3>
                   <input
                     className="pl-2 rounded-md py-2 border-[0.0px] border-black    w-full text-lg font-medium "
-                    {...register("companyName", { required: true })}
+                    {...register("companyName")}
                     type="text"
                     placeholder="Ex: Microsoft"
                     id=""
@@ -1132,7 +1140,7 @@ const UserProfileForm = () => {
                   </h3>
                   <input
                     className="pl-2 rounded-md py-2 border-[0.0px] border-black    w-full text-lg font-medium "
-                    {...register("jobLocation", { required: true })}
+                    {...register("jobLocation")}
                     type="text"
                     placeholder="Ex: Dhaka, Bangladesh"
                     id=""
@@ -1151,7 +1159,7 @@ const UserProfileForm = () => {
                     <div className=" grid grid-cols-2 gap-6">
                       <div>
                         <select
-                          {...register("jobStartMonth", { required: true })}
+                          {...register("jobStartMonth")}
                           className="text-lg font-medium rounded-md py-2 w-full"
                           id=""
                         >
@@ -1202,7 +1210,7 @@ const UserProfileForm = () => {
                       </div>
                       <div>
                         <select
-                          {...register("jobStartYear", { required: true })}
+                          {...register("jobStartYear")}
                           className="text-lg font-medium rounded-md py-2  w-full"
                           id=""
                         >
@@ -1288,7 +1296,7 @@ const UserProfileForm = () => {
                     <div className=" grid grid-cols-2 gap-6">
                       <div>
                         <select
-                          {...register("jobEndMonth", { required: true })}
+                          {...register("jobEndMonth")}
                           className="text-lg font-medium rounded-md py-2  w-full"
                           id=""
                         >
@@ -1340,7 +1348,7 @@ const UserProfileForm = () => {
                       </div>
                       <div>
                         <select
-                          {...register("jobEndYear", { required: true })}
+                          {...register("jobEndYear")}
                           className="text-lg font-medium rounded-md py-2 w-full"
                           id=""
                         >
@@ -1428,7 +1436,7 @@ const UserProfileForm = () => {
                     Description
                   </h3>
                   <textarea
-                    {...register("jobDescription", { required: true })}
+                    {...register("jobDescription")}
                     type="text"
                     placeholder="Describe your experience"
                     className="pl-2 rounded-md py-2    w-full text-lg font-medium "
