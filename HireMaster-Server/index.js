@@ -1,5 +1,5 @@
 const express = require("express");
-const { initializeApp, applicationDefault, getApps } = require("firebase-admin/app");
+const { initializeApp, applicationDefault, cert, getApps } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const cloudinary = require("cloudinary").v2;
 const app = express();
@@ -14,8 +14,14 @@ const { default: slugify } = require("slugify");
 const port = process.env.PORT || 5000;
 
 if (!getApps().length) {
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    : null;
+
   initializeApp({
-    credential: applicationDefault(),
+    credential: serviceAccount
+      ? cert(serviceAccount)
+      : applicationDefault(),
     projectId: process.env.FIREBASE_PROJECT_ID,
   });
 }
